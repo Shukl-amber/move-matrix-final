@@ -108,15 +108,15 @@ export default function PrimitiveDetailsPage() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <FileCode className="h-4 w-4 text-muted-foreground" />
-                      <div className="text-sm font-medium">{primitive.moduleName}.move</div>
+                      <div className="text-sm font-medium">{primitive.moduleName || primitive.name.toLowerCase().replace(/\s+/g, '_')}.move</div>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Module address: {primitive.moduleAddress}
+                      Module address: {primitive.moduleAddress || '0x1'}
                     </div>
                   </div>
                   <div className="bg-background p-4 rounded-md font-mono text-xs overflow-x-auto">
                     <pre>
-                      {`module ${primitive.moduleAddress}::${primitive.moduleName} {
+                      {`module ${primitive.moduleAddress || '0x1'}::${primitive.moduleName || primitive.name.toLowerCase().replace(/\s+/g, '_')} {
     // Source code would be displayed here
     // For demonstration purposes, we're showing placeholder content
     
@@ -153,11 +153,11 @@ export default function PrimitiveDetailsPage() {
                     <pre>
                       {`// Example code using ${primitive.name}
 script {
-    use ${primitive.moduleAddress}::${primitive.moduleName};
+    use ${primitive.moduleAddress || '0x1'}::${primitive.moduleName || primitive.name.toLowerCase().replace(/\s+/g, '_')};
     
     fun main(account: signer) {
         // Initialize or interact with the primitive
-        ${primitive.moduleName}::${primitive.functions[0]?.name || 'example_function'}(...);
+        ${primitive.moduleName || primitive.name.toLowerCase().replace(/\s+/g, '_')}::${primitive.functions[0]?.name || 'example_function'}(...);
     }
 }`}
                     </pre>
@@ -173,12 +173,12 @@ script {
                     <pre>
                       {`// Example composition
 module my_defi::leveraged_yield {
-    use ${primitive.moduleAddress}::${primitive.moduleName};
+    use ${primitive.moduleAddress || '0x1'}::${primitive.moduleName || primitive.name.toLowerCase().replace(/\s+/g, '_')};
     // Import other primitives...
     
     public fun setup_yield_strategy() {
         // Use the primitive as part of a larger composition
-        ${primitive.moduleName}::${primitive.functions[0]?.name || 'example_function'}(...);
+        ${primitive.moduleName || primitive.name.toLowerCase().replace(/\s+/g, '_')}::${primitive.functions[0]?.name || 'example_function'}(...);
         // Call other primitives...
     }
 }`}

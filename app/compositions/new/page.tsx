@@ -6,70 +6,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { mockPrimitives } from '@/lib/types/primitives';
-import { ArrowRight, ArrowLeft, Plus, Check, X, Layers, LinkIcon } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Plus, Check, X, Layers, Save } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { IConnection, IParameterMapping, CompositionStatus } from '@/lib/db/models/composition';
+import ConnectionBuilder from '@/components/compositions/ConnectionBuilder';
 
 export default function NewCompositionPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [composition, setComposition] = useState({
-    name: '',
-    description: '',
-    selectedPrimitives: [] as string[],
-    connections: [] as Array<{source: string, target: string, description: string}>,
-  });
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setComposition({...composition, name: e.target.value});
-  };
-
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setComposition({...composition, description: e.target.value});
-  };
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [selectedPrimitiveIds, setSelectedPrimitiveIds] = useState<string[]>([]);
+  const [connections, setConnections] = useState<IConnection[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlePrimitiveToggle = (primitiveId: string) => {
-    if (composition.selectedPrimitives.includes(primitiveId)) {
-      setComposition({
-        ...composition,
-        selectedPrimitives: composition.selectedPrimitives.filter(id => id !== primitiveId)
-      });
+    if (selectedPrimitiveIds.includes(primitiveId)) {
+      setSelectedPrimitiveIds(
+        selectedPrimitiveIds.filter(id => id !== primitiveId)
+      );
     } else {
-      setComposition({
-        ...composition,
-        selectedPrimitives: [...composition.selectedPrimitives, primitiveId]
-      });
+      setSelectedPrimitiveIds([...selectedPrimitiveIds, primitiveId]);
     }
-  };
-
-  const handleAddConnection = () => {
-    if (composition.selectedPrimitives.length < 2) return;
-    
-    const newConnection = {
-      source: composition.selectedPrimitives[0],
-      target: composition.selectedPrimitives[1],
-      description: 'Connect output of first primitive to input of second primitive'
-    };
-    
-    setComposition({
-      ...composition,
-      connections: [...composition.connections, newConnection]
-    });
-  };
-
-  const handleRemoveConnection = (index: number) => {
-    setComposition({
-      ...composition,
-      connections: composition.connections.filter((_, i) => i !== index)
-    });
-  };
-
-  const handleSave = () => {
-    // In a real implementation, we would save the composition to the backend
-    console.log('Saving composition:', composition);
-    // Navigate to the compositions page
-    router.push('/compositions');
   };
 
   const nextStep = () => {
@@ -80,9 +41,40 @@ export default function NewCompositionPage() {
     setStep(step - 1);
   };
 
-  const canProceedToStep2 = composition.name.trim() !== '' && composition.description.trim() !== '';
-  const canProceedToStep3 = composition.selectedPrimitives.length >= 2;
-  const canFinish = composition.connections.length >= 1;
+  const handleSave = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      // In a real application, we would call our server action here
+      // const result = await createNewComposition({
+      //   name,
+      //   description,
+      //   primitiveIds: selectedPrimitiveIds,
+      //   connections,
+      //   status: CompositionStatus.DRAFT
+      // });
+      
+      // For now, just log and navigate
+      console.log('Saving composition:', {
+        name,
+        description,
+        primitiveIds: selectedPrimitiveIds,
+        connections
+      });
+      
+      // Navigate to the compositions list page
+      router.push('/compositions');
+    } catch (error) {
+      console.error('Error saving composition:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Validation for each step
+  const canProceedToStep2 = name.trim() !== '' && description.trim() !== '';
+  const canProceedToStep3 = selectedPrimitiveIds.length >= 2;
+  const canSave = connections.length >= 1;
 
   return (
     <MainLayout>
@@ -134,17 +126,18 @@ export default function NewCompositionPage() {
                   <Input
                     id="name"
                     placeholder="e.g., Leveraged Yield Farming"
-                    value={composition.name}
-                    onChange={handleNameChange}
+                    value={name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
-                  <Input
+                  <Textarea
                     id="description"
                     placeholder="Describe what your composition does..."
-                    value={composition.description}
-                    onChange={handleDescriptionChange}
+                    value={description}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
+                    rows={5}
                   />
                 </div>
               </CardContent>
@@ -164,13 +157,13 @@ export default function NewCompositionPage() {
                   {mockPrimitives.map((primitive) => (
                     <Card 
                       key={primitive.id}
-                      className={`cursor-pointer transition-all ${composition.selectedPrimitives.includes(primitive.id) ? 'border-primary' : 'hover:border-primary/50'}`}
+                      className={`cursor-pointer transition-all ${selectedPrimitiveIds.includes(primitive.id) ? 'border-primary' : 'hover:border-primary/50'}`}
                       onClick={() => handlePrimitiveToggle(primitive.id)}
                     >
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-center">
                           <CardTitle className="text-lg">{primitive.name}</CardTitle>
-                          {composition.selectedPrimitives.includes(primitive.id) && (
+                          {selectedPrimitiveIds.includes(primitive.id) && (
                             <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                               <Check className="h-4 w-4 text-white" />
                             </div>
@@ -182,6 +175,18 @@ export default function NewCompositionPage() {
                       </CardHeader>
                       <CardContent>
                         <p className="text-sm text-muted-foreground">{primitive.description}</p>
+                        
+                        <div className="mt-3 text-xs text-muted-foreground">
+                          <p className="font-medium">Functions:</p>
+                          <ul className="list-disc list-inside">
+                            {primitive.functions.slice(0, 3).map((func, index) => (
+                              <li key={index} className="font-mono">{func.name}</li>
+                            ))}
+                            {primitive.functions.length > 3 && (
+                              <li className="text-muted-foreground">+ {primitive.functions.length - 3} more</li>
+                            )}
+                          </ul>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -199,48 +204,12 @@ export default function NewCompositionPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="rounded-md bg-muted p-4">
-                  <div className="text-sm font-medium mb-2">Selected Primitives</div>
-                  <div className="flex flex-wrap gap-2">
-                    {composition.selectedPrimitives.map((primitiveId) => {
-                      const primitive = mockPrimitives.find(p => p.id === primitiveId);
-                      return (
-                        <div key={primitiveId} className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium">
-                          {primitive?.name || primitiveId}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <Button onClick={handleAddConnection} className="gap-2" disabled={composition.selectedPrimitives.length < 2}>
-                    <LinkIcon className="h-4 w-4" />
-                    Create Connection
-                  </Button>
-                </div>
-
-                {composition.connections.length > 0 && (
-                  <div className="space-y-4">
-                    <div className="text-sm font-medium">Connections</div>
-                    {composition.connections.map((connection, index) => {
-                      const sourcePrimitive = mockPrimitives.find(p => p.id === connection.source);
-                      const targetPrimitive = mockPrimitives.find(p => p.id === connection.target);
-                      return (
-                        <div key={index} className="flex items-center justify-between p-4 border rounded-md">
-                          <div className="flex items-center gap-2">
-                            <div className="text-sm font-medium">{sourcePrimitive?.name || connection.source}</div>
-                            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                            <div className="text-sm font-medium">{targetPrimitive?.name || connection.target}</div>
-                          </div>
-                          <Button variant="outline" size="sm" onClick={() => handleRemoveConnection(index)}>
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                <ConnectionBuilder 
+                  primitives={mockPrimitives}
+                  selectedPrimitiveIds={selectedPrimitiveIds}
+                  connections={connections}
+                  onConnectionsChange={setConnections}
+                />
               </CardContent>
             </>
           )}
@@ -263,8 +232,9 @@ export default function NewCompositionPage() {
                 Next
               </Button>
             ) : (
-              <Button onClick={handleSave} disabled={!canFinish}>
-                Create Composition
+              <Button onClick={handleSave} disabled={!canSave || isSubmitting}>
+                {isSubmitting ? 'Creating...' : 'Create Composition'}
+                {!isSubmitting && <Save className="h-4 w-4 ml-2" />}
               </Button>
             )}
           </div>
