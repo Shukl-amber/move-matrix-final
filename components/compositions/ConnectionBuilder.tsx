@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowRight, Link2, Plus, Save, X } from 'lucide-react';
+import { ArrowRight, Link2, Plus, Save, X, Trash2 } from 'lucide-react';
 import FunctionSelector from './FunctionSelector';
 import ParameterMapping from './ParameterMapping';
 import { IPrimitive } from '@/lib/db/models/primitive';
@@ -17,13 +17,20 @@ interface ConnectionBuilderProps {
   selectedPrimitiveIds: string[];
   connections: IConnection[];
   onConnectionsChange: (connections: IConnection[]) => void;
+  onDelete: () => void;
+  availableFunctions: {
+    source: Function[];
+    target: Function[];
+  };
 }
 
 export default function ConnectionBuilder({
   primitives,
   selectedPrimitiveIds,
   connections,
-  onConnectionsChange
+  onConnectionsChange,
+  onDelete,
+  availableFunctions,
 }: ConnectionBuilderProps) {
   const [isCreatingConnection, setIsCreatingConnection] = useState(false);
   const [newConnection, setNewConnection] = useState<Partial<IConnection>>({});
@@ -126,219 +133,88 @@ export default function ConnectionBuilder({
     setParameterMappings([]);
   };
 
+  const handleSourceFunctionSelect = (functionName: string) => {
+    setNewConnection({
+      ...newConnection,
+      sourceFunction: functionName,
+      parameterMappings: [],
+    });
+  };
+
+  const handleTargetFunctionSelect = (functionName: string) => {
+    setNewConnection({
+      ...newConnection,
+      targetFunction: functionName,
+      parameterMappings: [],
+    });
+  };
+
+  const handleParameterMappingsUpdate = (mappings: IParameterMapping[]) => {
+    setNewConnection({
+      ...newConnection,
+      parameterMappings: mappings,
+    });
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Connections</h3>
-        {!isCreatingConnection && (
-          <Button 
-            onClick={startConnection} 
-            disabled={!canCreateConnection} 
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Connection
-          </Button>
-        )}
+    <Card className="border border-white/10 backdrop-blur-sm bg-black-200/50 p-6 rounded-xl">
+      <div className="flex justify-between items-start mb-6">
+        <h3 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">
+          Connection <span className="text-purple">Configuration</span>
+        </h3>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onDelete}
+          className="text-white/50 hover:text-red-500 hover:bg-red-500/20 rounded-xl"
+        >
+          <Trash2 className="h-5 w-5" />
+        </Button>
       </div>
-      
-      {!canCreateConnection && !isCreatingConnection && (
-        <Card className="bg-muted/30">
-          <CardContent className="pt-6 text-center text-muted-foreground">
-            Select at least two primitives to create connections
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Connection Builder Interface */}
-      {isCreatingConnection && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Create Connection</CardTitle>
-            <CardDescription>
-              Define how your primitives interact with each other
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Source Primitive */}
-              <div className="space-y-4">
-                <div>
-                  <Label>Source Primitive</Label>
-                  <Select
-                    value={newConnection.sourceId || ""}
-                    onValueChange={handleSourcePrimitiveChange}
-                  >
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Select source primitive" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedPrimitives.map(primitive => (
-                        <SelectItem 
-                          key={primitive.id} 
-                          value={primitive.id}
-                          disabled={primitive.id === newConnection.targetId}
-                        >
-                          {primitive.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {newConnection.sourceId && (
-                  <FunctionSelector
-                    primitive={getPrimitiveById(newConnection.sourceId) as IPrimitive}
-                    selectedFunction={newConnection.sourceFunction || null}
-                    onChange={(func) => setNewConnection({...newConnection, sourceFunction: func})}
-                    label="Source Function"
-                  />
-                )}
-              </div>
-              
-              {/* Target Primitive */}
-              <div className="space-y-4">
-                <div>
-                  <Label>Target Primitive</Label>
-                  <Select
-                    value={newConnection.targetId || ""}
-                    onValueChange={handleTargetPrimitiveChange}
-                  >
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Select target primitive" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedPrimitives.map(primitive => (
-                        <SelectItem 
-                          key={primitive.id} 
-                          value={primitive.id}
-                          disabled={primitive.id === newConnection.sourceId}
-                        >
-                          {primitive.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {newConnection.targetId && (
-                  <FunctionSelector
-                    primitive={getPrimitiveById(newConnection.targetId) as IPrimitive}
-                    selectedFunction={newConnection.targetFunction || null}
-                    onChange={(func) => setNewConnection({...newConnection, targetFunction: func})}
-                    label="Target Function"
-                  />
-                )}
-              </div>
-            </div>
-            
-            {/* Parameter Mappings */}
-            {newConnection.sourceFunction && newConnection.targetFunction && (
-              <ParameterMapping
-                sourcePrimitive={getPrimitiveById(newConnection.sourceId || '') as IPrimitive}
-                sourceFunction={newConnection.sourceFunction}
-                targetPrimitive={getPrimitiveById(newConnection.targetId || '') as IPrimitive}
-                targetFunction={newConnection.targetFunction}
-                parameterMappings={parameterMappings}
-                onParameterMappingsChange={setParameterMappings}
-              />
-            )}
-            
-            {/* Connection Description */}
-            <div className="space-y-2">
-              <Label>Connection Description</Label>
-              <Input
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe what this connection does"
-              />
-            </div>
-            
-            {/* Actions */}
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={cancelConnection}>
-                Cancel
-              </Button>
-              <Button onClick={saveConnection} disabled={!canSaveConnection}>
-                <Save className="h-4 w-4 mr-2" />
-                Save Connection
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Existing Connections List */}
-      {connections.length > 0 && (
-        <div className="space-y-4 mt-6">
-          <h4 className="text-sm font-medium">Existing Connections</h4>
-          {connections.map((connection, index) => {
-            const sourcePrimitive = getPrimitiveById(connection.sourceId);
-            const targetPrimitive = getPrimitiveById(connection.targetId);
-            
-            if (!sourcePrimitive || !targetPrimitive) return null;
-            
-            return (
-              <Card key={index} className="border border-muted">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Link2 className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium text-sm">Connection {index + 1}</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeConnection(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="mt-3 flex items-center gap-2">
-                    <div className="text-sm">
-                      {sourcePrimitive.name}
-                      <span className="text-xs text-muted-foreground mx-1">.</span>
-                      <span className="font-mono text-xs">{connection.sourceFunction}</span>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                    <div className="text-sm">
-                      {targetPrimitive.name}
-                      <span className="text-xs text-muted-foreground mx-1">.</span>
-                      <span className="font-mono text-xs">{connection.targetFunction}</span>
-                    </div>
-                  </div>
-                  
-                  {connection.description && (
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      {connection.description}
-                    </div>
-                  )}
-                  
-                  {connection.parameterMappings.length > 0 && (
-                    <div className="mt-3 text-xs">
-                      <div className="font-medium mb-1">Parameter Mappings:</div>
-                      <div className="space-y-1">
-                        {connection.parameterMappings.map((mapping, mappingIndex) => (
-                          <div key={mappingIndex} className="flex items-center gap-1">
-                            <span className="font-mono">{mapping.targetParam}</span>
-                            <span>←</span>
-                            {mapping.sourceParam ? (
-                              <span className="font-mono">{mapping.sourceParam}</span>
-                            ) : (
-                              <span className="italic">{mapping.constantValue || 'constant'}</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+
+      <div className="space-y-6">
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <label className="text-sm font-medium text-white/70">Source Function</label>
+            <FunctionSelector
+              functions={availableFunctions.source}
+              selectedFunction={newConnection.sourceFunction}
+              onSelect={handleSourceFunctionSelect}
+            />
+          </div>
+          <div className="space-y-4">
+            <label className="text-sm font-medium text-white/70">Target Function</label>
+            <FunctionSelector
+              functions={availableFunctions.target}
+              selectedFunction={newConnection.targetFunction}
+              onSelect={handleTargetFunctionSelect}
+            />
+          </div>
         </div>
-      )}
-    </div>
+
+        {newConnection.sourceFunction && newConnection.targetFunction && (
+          <div className="pt-6 border-t border-white/10">
+            <h4 className="text-lg font-medium mb-4 text-white/90">Parameter Mappings</h4>
+            <ParameterMapping
+              sourceFunction={availableFunctions.source.find(
+                (f) => f.name === newConnection.sourceFunction
+              )}
+              targetFunction={availableFunctions.target.find(
+                (f) => f.name === newConnection.targetFunction
+              )}
+              mappings={newConnection.parameterMappings}
+              onUpdate={handleParameterMappingsUpdate}
+            />
+          </div>
+        )}
+
+        <div className="flex justify-end pt-6">
+          <Button className="bg-purple hover:bg-purple/80 text-white rounded-xl gap-2">
+            Save Connection
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </Card>
   );
 } 
