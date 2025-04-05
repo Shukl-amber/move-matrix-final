@@ -107,40 +107,62 @@ export async function generateMoveCode(id: string, composition: IComposition) {
   try {
     console.log(`Generating Move code for composition: ${id}`);
     
-    // Instead of generating code from primitives, return the hardcoded message module
-    // Using a simpler version that has less chance of simulation errors
-    const generatedCode = `module hello_block::msg {
-    use std::signer;
-    use std::string;
-
-    /// Resource that wraps a message
-    struct MessageHolder has key {
-        message: string::String,
-    }
-
-    /// Public function to get a message
-    public fun get_message(addr: address): string::String acquires MessageHolder {
-        assert!(exists<MessageHolder>(addr), 0);
-        *&borrow_global<MessageHolder>(addr).message
-    }
-
-    /// Public entry function that allows an account to set a message
-    public entry fun set_message(account: signer, message_bytes: vector<u8>) acquires MessageHolder {
-        let account_addr = signer::address_of(&account);
-        let message = string::utf8(message_bytes);
-        
-        if (!exists<MessageHolder>(account_addr)) {
-            move_to(&account, MessageHolder {
-                message
-            })
-        } else {
-            let old_message_holder = borrow_global_mut<MessageHolder>(account_addr);
-            old_message_holder.message = message;
-        }
-    }
-}`;
+    // Import the necessary services
+    const { generateMoveCode: generateCode } = await import('@/lib/services/codeGenerationService');
+    const primitiveService = await import('@/lib/db/services/primitiveService');
     
-    // Update the composition with the hardcoded generated code
+    // Fetch the primitives used in this composition
+    // Extract primitive IDs from the composition
+    const primitiveIds = composition.primitiveIds || 
+                        (composition.primitives || []).map(p => typeof p === 'string' ? p : p.primitiveId);
+    
+    if (!primitiveIds || primitiveIds.length === 0) {
+      throw new Error('No primitives found in the composition');
+    }
+    
+    console.log(`Fetching ${primitiveIds.length} primitives for code generation`);
+    
+    // Fetch primitives one by one and create a record
+    const primitives: Record<string, IPrimitive> = {};
+    for (const primId of primitiveIds) {
+      const primitive = await primitiveService.getPrimitiveById(primId);
+      if (primitive) {
+        primitives[primId] = primitive;
+      }
+    }
+    
+    if (Object.keys(primitives).length === 0) {
+      throw new Error('Failed to fetch primitives for the composition');
+    }
+    
+    // Map composition connections from DB format to validator format
+    const validatorConnections = (composition.connections || []).map(conn => ({
+      sourceId: conn.sourceId,
+      targetId: conn.targetId,
+      sourceFunctionId: conn.sourceFunction,
+      targetFunctionId: conn.targetFunction
+    }));
+    
+    // Adapt composition to match the expected interface for code generation
+    const adaptedComposition = {
+      id: composition.id,
+      name: composition.name,
+      description: composition.description,
+      ownerId: composition.ownerId || '',
+      primitives: primitiveIds,
+      connections: validatorConnections,
+      createdAt: composition.createdAt || new Date(),
+      updatedAt: composition.updatedAt || new Date(),
+      status: (composition.status || 'draft') as 'draft' | 'validated' | 'deployed'
+    };
+    
+    // Generate the Move code using the service
+    const codeResult = generateCode(adaptedComposition, primitives);
+    const generatedCode = codeResult.fullSourceCode;
+    
+    console.log(`Successfully generated ${generatedCode.length} bytes of Move code`);
+    
+    // Update the composition with the generated code
     await updateCompositionDeploymentStatus(
       id,
       'compiled',

@@ -11,7 +11,7 @@ interface GlobalWithMongoose {
 // Make TypeScript see global as having the mongoose property
 const globalWithMongoose = global as unknown as GlobalWithMongoose;
 
-  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://suyogp0607:prVJc7eQNK53J69D@cluster0.t7m4spr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+  const MONGODB_URI = process.env.MONGODB_URI || "";
   const DB_NAME = 'movematrix';
 
 // Initialize the cached object if it doesn't exist
