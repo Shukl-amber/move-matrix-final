@@ -1,0 +1,212 @@
+DeFi Product Examples
+Based on the primitives available in your system (Lending Protocol, AMM Swap, Liquidity Pool, AutoCompound Staking, Yield Farm, and Flash Loan Provider), here are three powerful DeFi products that can be composed:
+
+
+1. Leveraged Yield Farming Strategy
+Title: Leveraged Yield Optimization
+Description: This DeFi product enables users to amplify their yield farming returns through leverage. It uses the Flash Loan Provider to borrow additional capital, pairs it with user funds in a Liquidity Pool, and then stakes the resulting LP tokens in a Yield Farm for auto-compounding rewards. This creates a leveraged position that maximizes yield farming returns while managing risk.
+Composition Details:
+Primitives Used:
+Flash Loan Provider (ID: "flash-loan")
+Liquidity Pool (ID: "liquidity-pool")
+Yield Farm (ID: "yield-farm")
+
+[
+  {
+    "sourceId": "flash-loan",
+    "sourceFunction": "borrow",
+    "targetId": "liquidity-pool",
+    "targetFunction": "add_liquidity",
+    "description": "Borrow funds via flash loan and add to liquidity pool",
+    "parameterMappings": [
+      {
+        "sourceParam": "amount",
+        "targetParam": "coin_a_amount",
+        "constantValue": null
+      },
+      {
+        "sourceParam": null,
+        "targetParam": "coin_b_amount",
+        "constantValue": "userDepositAmount"
+      },
+      {
+        "sourceParam": null,
+        "targetParam": "min_lp_tokens",
+        "constantValue": "expectedMinLPTokens"
+      }
+    ]
+  },
+  {
+    "sourceId": "liquidity-pool",
+    "sourceFunction": "add_liquidity",
+    "targetId": "yield-farm",
+    "targetFunction": "deposit",
+    "description": "Stake received LP tokens in yield farm",
+    "parameterMappings": [
+      {
+        "sourceParam": "add_liquidity_return",
+        "targetParam": "amount",
+        "constantValue": null
+      }
+    ]
+  },
+  {
+    "sourceId": "yield-farm",
+    "sourceFunction": "harvest",
+    "targetId": "flash-loan",
+    "targetFunction": "repay",
+    "description": "Use yield rewards to repay flash loan",
+    "parameterMappings": [
+      {
+        "sourceParam": "harvest_return",
+        "targetParam": "repayment_coins",
+        "constantValue": null
+      },
+      {
+        "sourceParam": null,
+        "targetParam": "receipt",
+        "constantValue": "flashLoanReceipt"
+      }
+    ]
+  }
+]
+
+
+2. Borrow-Swap-Stake Strategy
+Title: Borrow-Swap-Stake Yield Optimizer
+Description: This DeFi product allows users to borrow assets from a lending protocol, swap them for another token with higher yield potential, and then stake those tokens for auto-compounding rewards. This strategy is useful for users who want to maintain their original token position while still generating yield from other token opportunities.
+Composition Details:
+Primitives Used:
+Lending Protocol (ID: "primitive-1")
+AMM Swap (ID: "primitive-2")
+AutoCompound Staking (ID: "autocompound-staking")
+
+[
+  {
+    "sourceId": "primitive-1",
+    "sourceFunction": "borrow",
+    "targetId": "primitive-2",
+    "targetFunction": "swapExactTokensForTokens",
+    "description": "Borrow tokens from lending protocol and swap them",
+    "parameterMappings": [
+      {
+        "sourceParam": "borrow_return",
+        "targetParam": "amountIn",
+        "constantValue": null
+      },
+      {
+        "sourceParam": null,
+        "targetParam": "minAmountOut",
+        "constantValue": "minExpectedSwapAmount"
+      },
+      {
+        "sourceParam": "account",
+        "targetParam": "account",
+        "constantValue": null
+      }
+    ]
+  },
+  {
+    "sourceId": "primitive-2",
+    "sourceFunction": "swapExactTokensForTokens",
+    "targetId": "autocompound-staking",
+    "targetFunction": "stake",
+    "description": "Stake swapped tokens for auto-compounding rewards",
+    "parameterMappings": [
+      {
+        "sourceParam": "swapExactTokensForTokens_return",
+        "targetParam": "amount",
+        "constantValue": null
+      },
+      {
+        "sourceParam": null,
+        "targetParam": "lock_period",
+        "constantValue": "stakingLockPeriod"
+      }
+    ]
+  }
+]
+
+
+
+3. Dynamic Liquidity Rebalancer
+Title: Dynamic Liquidity Rebalancer
+Description: This DeFi product automatically manages liquidity across multiple pools based on market conditions and yield opportunities. It uses the Liquidity Pool to provide initial liquidity, monitors APR through the staking protocol, and dynamically moves liquidity between pools using AMM Swap. This strategy aims to maximize capital efficiency by always positioning liquidity in the highest-yielding opportunities.
+Composition Details:
+Primitives Used:
+Liquidity Pool (ID: "liquidity-pool")
+AutoCompound Staking (ID: "autocompound-staking")
+AMM Swap (ID: "primitive-2")
+
+[
+  {
+    "sourceId": "liquidity-pool",
+    "sourceFunction": "add_liquidity",
+    "targetId": "autocompound-staking",
+    "targetFunction": "stake",
+    "description": "Provide liquidity and stake LP tokens",
+    "parameterMappings": [
+      {
+        "sourceParam": "add_liquidity_return",
+        "targetParam": "amount",
+        "constantValue": null
+      },
+      {
+        "sourceParam": null,
+        "targetParam": "lock_period",
+        "constantValue": "initialLockPeriod"
+      }
+    ]
+  },
+  {
+    "sourceId": "autocompound-staking",
+    "sourceFunction": "get_apr",
+    "targetId": "liquidity-pool",
+    "targetFunction": "remove_liquidity",
+    "description": "Check APR and remove liquidity if below threshold",
+    "parameterMappings": [
+      {
+        "sourceParam": null,
+        "targetParam": "lp_amount",
+        "constantValue": "stakedLPAmount"
+      },
+      {
+        "sourceParam": null,
+        "targetParam": "min_a_out",
+        "constantValue": "minATokens"
+      },
+      {
+        "sourceParam": null,
+        "targetParam": "min_b_out",
+        "constantValue": "minBTokens"
+      }
+    ]
+  },
+  {
+    "sourceId": "liquidity-pool",
+    "sourceFunction": "remove_liquidity",
+    "targetId": "primitive-2",
+    "targetFunction": "swapExactTokensForTokens",
+    "description": "Swap removed liquidity to optimize for new pool",
+    "parameterMappings": [
+      {
+        "sourceParam": "remove_liquidity_return",
+        "targetParam": "amountIn",
+        "constantValue": null
+      },
+      {
+        "sourceParam": null,
+        "targetParam": "minAmountOut",
+        "constantValue": "swapMinOutput"
+      },
+      {
+        "sourceParam": null,
+        "targetParam": "account",
+        "constantValue": "userAccount"
+      }
+    ]
+  }
+]
+
+
+These three DeFi product examples demonstrate how the primitives in your system can be connected to create sophisticated financial strategies. Each product leverages multiple primitives and carefully maps parameters between connected functions to create a seamless flow of operations. The connections adhere to the validation requirements specified in the connectionValidator.ts, ensuring type compatibility and protocol safety across the composition.
