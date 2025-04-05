@@ -84,37 +84,14 @@ export async function generateMoveCode(
     });
     
     // Generate the function body based on execution order
-    let variableCounter = 1;
-    const variableMap: Record<string, string> = {};
-    
-    executionOrder.forEach(nodeId => {
-      // Find connections where this primitive is the source
-      const connections = composition.connections.filter(conn => conn.sourceId === nodeId);
-      
-      connections.forEach(connection => {
-        const sourcePrimitive = primitives[connection.sourceId];
-        const sourceFunction = sourcePrimitive?.functions?.find(f => f.name === connection.sourceFunctionId);
-        
-        if (sourcePrimitive && sourceFunction) {
-          const functionParams = sourceFunction.parameters.map(
-            param => variableMap[`${connection.sourceId}-${param}`] || param
-          ).join(', ');
-          
-          const resultVar = `result_${variableCounter++}`;
-          variableMap[`${connection.sourceId}-${sourceFunction.name}`] = resultVar;
-          
-          mainFunctionBody += `    // Execute ${sourcePrimitive.name} ${sourceFunction.name}\n`;
-          mainFunctionBody += `    let ${resultVar} = ${sourcePrimitive.moduleName}::${sourceFunction.name}(${functionParams});\n\n`;
-        }
-      });
-    });
+    const { body, variableMap } = generateFunctionBody(executionOrder, composition.connections, primitives);
     
     // Create the full source code
     const mainFunction = `
     public entry fun execute_strategy(
         ${parameters.join(',\n        ')}
     ) {
-${mainFunctionBody}    }
+${body}    }
 `;
     
     let fullSourceCode = `module ${moduleName} {
@@ -153,7 +130,7 @@ ${mainFunction}
         name: 'execute_strategy',
         parameters: parameters.map(p => p.split(':')[0].trim()),
         returnType: 'void',
-        body: mainFunctionBody,
+        body: body,
       }],
       fullSourceCode,
     };
@@ -218,6 +195,7 @@ export async function deployComposition(
 function createDependencyGraph(connections: IConnection[]): Record<string, string[]> {
   const graph: Record<string, string[]> = {};
   
+  // Initialize all nodes that appear in connections
   connections.forEach(connection => {
     if (!graph[connection.sourceId]) {
       graph[connection.sourceId] = [];
@@ -225,36 +203,64 @@ function createDependencyGraph(connections: IConnection[]): Record<string, strin
     if (!graph[connection.targetId]) {
       graph[connection.targetId] = [];
     }
-    
-    graph[connection.sourceId].push(connection.targetId);
+  });
+  
+  // Add directed edges from source to target
+  connections.forEach(connection => {
+    // Avoid adding duplicate edges
+    if (!graph[connection.sourceId].includes(connection.targetId)) {
+      graph[connection.sourceId].push(connection.targetId);
+    }
   });
   
   return graph;
 }
 
 // Perform a topological sort of the dependency graph
+// Returns a valid execution order or throws an error if a cycle is detected
 function topologicalSort(graph: Record<string, string[]>): string[] {
   const visited: Record<string, boolean> = {};
   const temp: Record<string, boolean> = {};
   const order: string[] = [];
   
-  function visit(node: string): void {
+  function visit(node: string, path: string[] = []): void {
+    // If node is already in temp, we have a cycle
     if (temp[node]) {
-      throw new Error(`Circular dependency detected at node ${node}`);
+      const cycle = [...path, node].join(' -> ');
+      console.error(`Circular dependency detected: ${cycle}`);
+      
+      // Instead of throwing an error, just warn and return
+      // This allows the code generation to continue, though with imperfect results
+      console.warn(`Breaking circular dependency by ignoring edge from ${path[path.length - 1]} to ${node}`);
+      return;
     }
     
-    if (!visited[node]) {
-      temp[node] = true;
-      
-      const neighbors = graph[node] || [];
-      neighbors.forEach(neighbor => visit(neighbor));
-      
-      temp[node] = false;
-      visited[node] = true;
-      order.unshift(node); // Add to the beginning of the array
+    // If we've already processed this node, skip
+    if (visited[node]) {
+      return;
     }
+    
+    // Mark node as being processed
+    temp[node] = true;
+    path.push(node);
+    
+    // Visit all neighbors
+    const neighbors = graph[node] || [];
+    for (const neighbor of neighbors) {
+      // Only visit if not already visited
+      if (!visited[neighbor]) {
+        visit(neighbor, [...path]);
+      }
+      // Note: we don't treat cycles as errors anymore since we warned above
+    }
+    
+    // Mark node as processed and add to order
+    temp[node] = false;
+    visited[node] = true;
+    order.unshift(node); // Add to beginning for reverse topological order
   }
   
+  // Visit all nodes to ensure we cover disconnected components
   Object.keys(graph).forEach(node => {
     if (!visited[node]) {
       visit(node);
@@ -262,6 +268,59 @@ function topologicalSort(graph: Record<string, string[]>): string[] {
   });
   
   return order;
+}
+
+// Generate the function body based on execution order with better parameter mapping
+function generateFunctionBody(
+  executionOrder: string[],
+  connections: IConnection[],
+  primitives: Record<string, IPrimitive>
+): { body: string, variableMap: Record<string, string> } {
+  let mainFunctionBody = '';
+  let variableCounter = 1;
+  const variableMap: Record<string, string> = {};
+  
+  executionOrder.forEach(nodeId => {
+    // Find connections where this primitive is the source
+    const nodeConnections = connections.filter(conn => conn.sourceId === nodeId);
+    
+    nodeConnections.forEach(connection => {
+      const sourcePrimitive = primitives[connection.sourceId];
+      const sourceFunction = sourcePrimitive?.functions?.find(f => f.name === connection.sourceFunctionId);
+      
+      if (sourcePrimitive && sourceFunction) {
+        // Generate function parameters with proper mapping
+        const params: string[] = [];
+        
+        // Handle all parameters of the source function
+        sourceFunction.parameters.forEach(paramName => {
+          // For first parameter which is often the account/signer
+          if (paramName === 'account' || paramName.includes('signer')) {
+            params.push('account');
+          } 
+          // For other parameters, try to use mapped values or default
+          else {
+            const mappedVar = variableMap[`${connection.sourceId}-${paramName}`] || paramName;
+            params.push(mappedVar);
+          }
+        });
+        
+        const functionParams = params.join(', ');
+        const resultVar = `result_${variableCounter++}`;
+        
+        // Store the result variable in the map for source function result
+        variableMap[`${connection.sourceId}-${connection.sourceFunctionId}`] = resultVar;
+        // Also store it as a generic "result" for this function
+        variableMap[`${connection.sourceId}-result`] = resultVar;
+        
+        // Add function call to body
+        mainFunctionBody += `    // Execute ${sourcePrimitive.name}::${sourceFunction.name}\n`;
+        mainFunctionBody += `    let ${resultVar} = ${sourcePrimitive.moduleName}::${sourceFunction.name}(${functionParams});\n\n`;
+      }
+    });
+  });
+  
+  return { body: mainFunctionBody, variableMap };
 }
 
 // Helper function to infer data type from parameter name

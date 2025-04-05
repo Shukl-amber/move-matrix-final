@@ -134,19 +134,19 @@ module lending_protocol {
       {
         name: "addLiquidity",
         description: "Add liquidity to the pool",
-        parameters: ["amountA", "amountB", "account"],
+        parameters: ["account", "amountA", "amountB"],
         returnType: "u64"
       },
       {
         name: "removeLiquidity",
         description: "Remove liquidity from the pool",
-        parameters: ["lpAmount", "account"],
-        returnType: "bool"
+        parameters: ["account", "lpAmount"],
+        returnType: "u64"
       },
       {
         name: "swapExactTokensForTokens",
         description: "Swap an exact amount of tokens for another token",
-        parameters: ["amountIn", "minAmountOut", "account"],
+        parameters: ["account", "amountIn", "minAmountOut"],
         returnType: "u64"
       }
     ],
@@ -305,19 +305,19 @@ module liquidity_pool {
       {
         name: "add_liquidity",
         description: "Add liquidity to the pool with both tokens",
-        parameters: ["coin_a_amount", "coin_b_amount", "min_lp_tokens"],
+        parameters: ["account", "coin_a_amount", "coin_b_amount", "min_lp_tokens"],
         returnType: "u64"
       },
       {
         name: "remove_liquidity",
         description: "Remove liquidity from the pool and get back both tokens",
-        parameters: ["lp_amount", "min_a_out", "min_b_out"],
+        parameters: ["account", "lp_amount", "min_a_out", "min_b_out"],
         returnType: "u64"
       },
       {
         name: "swap",
         description: "Swap one token for another through the pool",
-        parameters: ["coin_in_amount", "min_out", "is_a_to_b"],
+        parameters: ["account", "coin_in_amount", "min_out", "is_a_to_b"],
         returnType: "u64"
       }
     ],
@@ -431,13 +431,13 @@ module auto_stake {
       {
         name: "stake",
         description: "Stake tokens in the autocompounding vault",
-        parameters: ["amount", "lock_period"],
+        parameters: ["account", "amount", "lock_period"],
         returnType: "u64"
       },
       {
         name: "unstake",
         description: "Unstake tokens and claim accumulated rewards",
-        parameters: ["amount"],
+        parameters: ["account", "amount"],
         returnType: "u64"
       },
       {
@@ -604,19 +604,19 @@ module yield_farm {
       {
         name: "deposit",
         description: "Deposit LP tokens to farm for rewards",
-        parameters: ["amount"],
+        parameters: ["account", "amount"],
         returnType: "u64"
       },
       {
         name: "withdraw",
         description: "Withdraw LP tokens and claim rewards",
-        parameters: ["amount"],
+        parameters: ["account", "amount"],
         returnType: "u64"
       },
       {
         name: "harvest",
         description: "Harvest rewards without withdrawing",
-        parameters: [],
+        parameters: ["account"],
         returnType: "u64"
       },
       {
@@ -737,19 +737,19 @@ module flash_loan {
       {
         name: "borrow",
         description: "Borrow assets in a flash loan",
-        parameters: ["amount"],
-        returnType: "(Coin<CoinType>, FlashLoanReceipt<CoinType>)"
+        parameters: ["account", "amount"],
+        returnType: "u64"
       },
       {
         name: "repay",
         description: "Repay a flash loan with fee",
         parameters: ["repayment_coins", "receipt"],
-        returnType: ""
+        returnType: "void"
       },
       {
         name: "execute_flash_loan",
         description: "Execute a complete flash loan with callback",
-        parameters: ["amount"],
+        parameters: ["account", "amount"],
         returnType: "u64"
       }
     ],

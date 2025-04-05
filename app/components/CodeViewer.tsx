@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Check, Copy, Download, Code } from 'lucide-react';
@@ -13,6 +13,48 @@ interface CodeViewerProps {
 
 export default function CodeViewer({ generatedCode, onDownload }: CodeViewerProps) {
   const [copied, setCopied] = useState(false);
+  const [displayCode, setDisplayCode] = useState(generatedCode.fullSourceCode);
+  
+  // Process the code on mount to ensure we show only Move code, not JSON
+  useEffect(() => {
+    let codeToDisplay = generatedCode.fullSourceCode;
+    
+    // Check if the code starts with JSON formatting
+    if (codeToDisplay.trim().startsWith('{')) {
+      try {
+        const jsonObject = JSON.parse(codeToDisplay.trim());
+        if (jsonObject && typeof jsonObject.code === 'string') {
+          // If it's JSON-formatted code, extract just the Move code
+          codeToDisplay = jsonObject.code.trim();
+        }
+      } catch (e) {
+        // If JSON parsing fails, use the original code
+        console.warn('Failed to parse code as JSON', e);
+      }
+    }
+    
+    // Check if the code includes the JSON string marker
+    if (codeToDisplay.includes('{"code":')) {
+      try {
+        // Try to extract the JSON object from within the string
+        const jsonMatch = codeToDisplay.match(/\{\"code\":\s*\"([^]*?)\"\}/);
+        if (jsonMatch && jsonMatch[1]) {
+          // Need to unescape the JSON string
+          codeToDisplay = jsonMatch[1].replace(/\\n/g, '\n')
+                                     .replace(/\\"/g, '"')
+                                     .replace(/\\\\/g, '\\');
+        }
+      } catch (e) {
+        console.warn('Failed to extract code from JSON string', e);
+      }
+    }
+    
+    // Remove any "json" prefix that might be present
+    codeToDisplay = codeToDisplay.replace(/^json\s+/, '');
+    
+    // Set the cleaned code for display
+    setDisplayCode(codeToDisplay);
+  }, [generatedCode.fullSourceCode]);
   
   // Handle copy to clipboard
   const handleCopy = async (text: string) => {
@@ -28,7 +70,7 @@ export default function CodeViewer({ generatedCode, onDownload }: CodeViewerProp
   // Handle download code as file
   const handleDownload = () => {
     const element = document.createElement('a');
-    const file = new Blob([generatedCode.fullSourceCode], { type: 'text/plain' });
+    const file = new Blob([displayCode], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
     element.download = `${generatedCode.moduleName}.move`;
     document.body.appendChild(element);
@@ -52,7 +94,7 @@ export default function CodeViewer({ generatedCode, onDownload }: CodeViewerProp
             variant="ghost" 
             size="sm"
             className="text-slate-400 hover:text-white"
-            onClick={() => handleCopy(generatedCode.fullSourceCode)}
+            onClick={() => handleCopy(displayCode)}
           >
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             <span className="ml-2">{copied ? 'Copied' : 'Copy'}</span>
@@ -86,7 +128,7 @@ export default function CodeViewer({ generatedCode, onDownload }: CodeViewerProp
         
         <TabsContent value="full" className="m-0">
           <pre className="bg-slate-950 p-4 text-slate-300 overflow-auto max-h-96">
-            <code>{generatedCode.fullSourceCode}</code>
+            <code>{displayCode}</code>
           </pre>
         </TabsContent>
         

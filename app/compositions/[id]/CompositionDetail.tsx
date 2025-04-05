@@ -252,7 +252,7 @@ export default function CompositionDetail({ composition, primitives }: Compositi
         
         setDeploymentError(errorMessage);
         setDeploymentResult({
-          success: false,
+        success: false,
           error: errorMessage
         });
       }
@@ -289,8 +289,25 @@ export default function CompositionDetail({ composition, primitives }: Compositi
       
       console.log('Code generation successful, received code length:', result.code?.length || 0);
       
-      // Convert the generated code to the IGeneratedCode format that the UI expects
-      const generatedSourceCode = result.code || '';
+      // Extract raw code from result - may contain JSON formatting
+      let generatedSourceCode = result.code || '';
+      
+      // Try to parse as JSON first (for Gemini-enhanced responses)
+      try {
+        // Check if it starts with a JSON opening brace
+        if (generatedSourceCode.trim().startsWith('{')) {
+          const jsonObject = JSON.parse(generatedSourceCode.trim());
+          
+          // If it's a valid JSON with a code property, use that
+          if (jsonObject && typeof jsonObject.code === 'string') {
+            console.log('Successfully parsed JSON-formatted code response');
+            generatedSourceCode = jsonObject.code.trim();
+          }
+        }
+      } catch (jsonError) {
+        console.warn('Response is not valid JSON, treating as raw Move code:', jsonError);
+        // Continue with original code if not valid JSON
+      }
       
       // Log the first few lines to verify content
       console.log('Generated code preview:', 
@@ -327,11 +344,11 @@ export default function CompositionDetail({ composition, primitives }: Compositi
         imports,
         functions,
         fullSourceCode: generatedSourceCode
-      };
-      
-      setGeneratedCode(code);
-      setIsValidated(true);
-      setActiveTab('code');
+    };
+    
+    setGeneratedCode(code);
+    setIsValidated(true);
+    setActiveTab('code');
       
       console.log('Code parsing complete:', { 
         moduleName, 
@@ -414,14 +431,14 @@ export default function CompositionDetail({ composition, primitives }: Compositi
           <p><strong>Note:</strong> Deployment is now performed through the Aptos CLI on the server.</p>
           <p className="mt-1">Your Move code will be compiled and deployed using the wallet address you provide below.</p>
           <p className="mt-1">You don't need to sign any transactions in your browser - the server will handle everything!</p>
-        </div>
-        
+          </div>
+          
         <div className="space-y-2">
-          <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2">
             <div className="w-full">
               <label className="text-sm mb-1 block">Your Aptos Wallet Address</label>
               <div className="flex gap-2">
-                <input 
+                    <input 
                   type="text"
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="Enter your 0x... wallet address"
@@ -445,10 +462,10 @@ export default function CompositionDetail({ composition, primitives }: Compositi
                   ? "Address imported from Petra wallet ✓" 
                   : "Enter your Aptos wallet address or connect to Petra to import it"
                 }
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          
+              
           <Button 
             onClick={() => onDeploy(address)} 
             disabled={!isValidated || isDeploying || !address} 
@@ -480,9 +497,9 @@ export default function CompositionDetail({ composition, primitives }: Compositi
                   <strong>Suggestion:</strong> Make sure you've entered a valid wallet address.
                 </div>
               )}
-            </div>
-          )}
-          
+                </div>
+              )}
+              
           {deploymentResult && deploymentResult.success && (
             <div className="text-sm p-3 border rounded border-green-200 bg-green-50 text-green-800">
               <p><strong>Deployment successful!</strong></p>
@@ -493,7 +510,7 @@ export default function CompositionDetail({ composition, primitives }: Compositi
                 Deployed from address: {deploymentResult.deploymentAddress}
               </p>
               {deploymentResult.explorerUrl && (
-                <Button 
+                <Button
                   variant="link" 
                   className="p-0 h-auto text-green-800 font-medium" 
                   onClick={() => window.open(deploymentResult.explorerUrl, '_blank')}
@@ -692,7 +709,7 @@ export default function CompositionDetail({ composition, primitives }: Compositi
                   </div>
                 </div>
               )}
-              <CodeViewer generatedCode={generatedCode} onDownload={() => console.log('Code downloaded')} />
+            <CodeViewer generatedCode={generatedCode} onDownload={() => console.log('Code downloaded')} />
             </>
           ) : (
             <div className="bg-muted p-4 rounded-md overflow-x-auto">
