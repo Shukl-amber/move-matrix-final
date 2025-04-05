@@ -40,6 +40,7 @@ export interface ICompositionPrimitive {
 // Composition model
 export interface IComposition {
   id: string;
+  _id?: string; // MongoDB's internal ID field
   name: string;
   description: string;
   ownerId: string;

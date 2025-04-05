@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 export default async function CompositionsPage() {
   // Fetch compositions from the database
   const compositions = await getAllCompositions();
+  console.log(compositions);
   
   // Create a map of primitive IDs to names for display
   const primitiveNames = new Map<string, string>();
@@ -64,40 +65,49 @@ export default async function CompositionsPage() {
 
         {compositions.length > 0 ? (
           <div className="space-y-8">
-            {compositions.map((composition) => (
-              <div key={composition.id} className="bg-background border rounded-lg overflow-hidden">
-                <div className="grid md:grid-cols-3 gap-6 p-6">
-                  <div className="col-span-2">
-                    <div className="mb-2 flex items-center gap-2">
-                      <h2 className="text-2xl font-bold">{composition.name}</h2>
-                      {getStatusBadge(composition.status || 'draft')}
+            {compositions.map((composition) => {
+              // Ensure we have a valid ID before rendering
+              const compositionId = composition.id || composition._id;
+              if (!compositionId) {
+                console.error('Invalid composition ID:', composition);
+                return null;
+              }
+              
+              return (
+                <div key={compositionId} className="bg-background border rounded-lg overflow-hidden">
+                  <div className="grid md:grid-cols-3 gap-6 p-6">
+                    <div className="col-span-2">
+                      <div className="mb-2 flex items-center gap-2">
+                        <h2 className="text-2xl font-bold">{composition.name}</h2>
+                        {getStatusBadge(composition.status || 'draft')}
+                      </div>
+                      <p className="text-muted-foreground mb-4">{composition.description}</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {(composition.primitiveIds || []).map((primitiveId) => (
+                          <div key={primitiveId} className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium">
+                            {getPrimitiveName(primitiveId)}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <p className="text-muted-foreground mb-4">{composition.description}</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {(composition.primitiveIds || []).map((primitiveId) => (
-                        <div key={primitiveId} className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium">
-                          {getPrimitiveName(primitiveId)}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex flex-col md:items-end justify-center gap-2">
-                    <Button asChild variant="outline">
-                      <Link href={`/compositions/${composition.id}`}>
-                        View Details <ArrowRight className="h-4 w-4 ml-2" />
-                      </Link>
-                    </Button>
-                    {composition.status === CompositionStatus.DEPLOYED ? (
-                      <Button>
-                        <Link href={`/compositions/${composition.id}`}>
-                          Deploy Composition
+                    <div className="flex flex-col md:items-end justify-center gap-2">
+                      <Button asChild variant="outline">
+                        <Link href={`/compositions/${compositionId}`}>
+                          View Details <ArrowRight className="h-4 w-4 ml-2" />
                         </Link>
                       </Button>
-                    ) : null}
+                      {composition.status === CompositionStatus.DEPLOYED ? (
+                        <Button>
+                          <Link href={`/compositions/${compositionId}`}>
+                            Deploy Composition
+                          </Link>
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12 border rounded-lg">
