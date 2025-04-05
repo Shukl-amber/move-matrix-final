@@ -76,11 +76,36 @@ interface FunctionDetailsProps {
 }
 
 function FunctionDetails({ primitive, functionName }: FunctionDetailsProps) {
+  if (!primitive.functions) {
+    return null;
+  }
+  
   const func = primitive.functions.find(f => f.name === functionName);
   
   if (!func) {
     return null;
   }
+  
+  // Parse parameters safely
+  const getParams = () => {
+    if (!func.parameters || !Array.isArray(func.parameters)) {
+      return [];
+    }
+    
+    return func.parameters.map(param => {
+      if (typeof param === 'string') {
+        return param;
+      }
+      // Handle MongoDB object with _id
+      if (typeof param === 'object' && param !== null) {
+        // Try to convert to string representation
+        return JSON.stringify(param).replace(/[{}"]/g, '').replace(/_id:[^,]+,?/, '');
+      }
+      return String(param);
+    });
+  };
+  
+  const params = getParams();
   
   return (
     <Card className="mt-4">
@@ -89,11 +114,11 @@ function FunctionDetails({ primitive, functionName }: FunctionDetailsProps) {
         <CardDescription className="text-xs">{func.description}</CardDescription>
       </CardHeader>
       <CardContent className="py-3">
-        {func.parameters.length > 0 ? (
+        {params.length > 0 ? (
           <div className="space-y-2">
             <Label className="text-xs">Parameters</Label>
             <div className="text-xs space-y-1">
-              {func.parameters.map((param, index) => (
+              {params.map((param, index) => (
                 <div key={index} className="flex justify-between">
                   <span className="font-mono">{param}</span>
                 </div>

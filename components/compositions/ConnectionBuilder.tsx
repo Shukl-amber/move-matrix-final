@@ -10,6 +10,7 @@ import FunctionSelector from './FunctionSelector';
 import ParameterMapping from './ParameterMapping';
 import { IPrimitive } from '@/lib/db/models/primitive';
 import { IConnection, IParameterMapping } from '@/lib/db/models/composition';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ConnectionBuilderProps {
   primitives: IPrimitive[];
@@ -40,10 +41,7 @@ export default function ConnectionBuilder({
   // Start creating a new connection
   const startConnection = () => {
     setIsCreatingConnection(true);
-    setNewConnection({
-      sourceId: selectedPrimitives[0]?.id,
-      targetId: selectedPrimitives[1]?.id,
-    });
+    setNewConnection({});
     setParameterMappings([]);
     setDescription('');
   };
@@ -88,7 +86,15 @@ export default function ConnectionBuilder({
   
   // Get primitive by ID
   const getPrimitiveById = (id: string): IPrimitive | undefined => {
-    return primitives.find(p => p.id === id);
+    if (!id) return undefined;
+    const primitive = primitives.find(p => p.id === id);
+    
+    if (!primitive) {
+      console.error(`Primitive with ID ${id} not found. Available primitives:`, primitives);
+      return undefined;
+    }
+    
+    return primitive;
   };
   
   // Check if we can save the connection
@@ -97,6 +103,28 @@ export default function ConnectionBuilder({
     newConnection.sourceFunction && 
     newConnection.targetId && 
     newConnection.targetFunction;
+
+  // Handle source primitive selection
+  const handleSourcePrimitiveChange = (primitiveId: string) => {
+    setNewConnection({
+      ...newConnection,
+      sourceId: primitiveId,
+      sourceFunction: undefined
+    });
+    // Reset parameter mappings when changing primitives
+    setParameterMappings([]);
+  };
+
+  // Handle target primitive selection
+  const handleTargetPrimitiveChange = (primitiveId: string) => {
+    setNewConnection({
+      ...newConnection,
+      targetId: primitiveId,
+      targetFunction: undefined
+    });
+    // Reset parameter mappings when changing primitives
+    setParameterMappings([]);
+  };
 
   return (
     <div className="space-y-6">
@@ -137,9 +165,25 @@ export default function ConnectionBuilder({
               <div className="space-y-4">
                 <div>
                   <Label>Source Primitive</Label>
-                  <div className="p-3 border rounded-md mt-2">
-                    {getPrimitiveById(newConnection.sourceId || '')?.name || 'Select a primitive'}
-                  </div>
+                  <Select
+                    value={newConnection.sourceId || ""}
+                    onValueChange={handleSourcePrimitiveChange}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder="Select source primitive" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedPrimitives.map(primitive => (
+                        <SelectItem 
+                          key={primitive.id} 
+                          value={primitive.id}
+                          disabled={primitive.id === newConnection.targetId}
+                        >
+                          {primitive.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 {newConnection.sourceId && (
@@ -156,9 +200,25 @@ export default function ConnectionBuilder({
               <div className="space-y-4">
                 <div>
                   <Label>Target Primitive</Label>
-                  <div className="p-3 border rounded-md mt-2">
-                    {getPrimitiveById(newConnection.targetId || '')?.name || 'Select a primitive'}
-                  </div>
+                  <Select
+                    value={newConnection.targetId || ""}
+                    onValueChange={handleTargetPrimitiveChange}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder="Select target primitive" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedPrimitives.map(primitive => (
+                        <SelectItem 
+                          key={primitive.id} 
+                          value={primitive.id}
+                          disabled={primitive.id === newConnection.sourceId}
+                        >
+                          {primitive.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 {newConnection.targetId && (

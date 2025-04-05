@@ -79,7 +79,7 @@ export default function PrimitiveDetailsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {primitive.functions.map((func, index) => (
+                {primitive.functions?.map((func, index) => (
                   <div key={index} className="p-4 border rounded-md">
                     <div className="flex items-center gap-2 mb-2">
                       <Code className="h-4 w-4 text-primary" />
@@ -120,7 +120,7 @@ export default function PrimitiveDetailsPage() {
     // Source code would be displayed here
     // For demonstration purposes, we're showing placeholder content
     
-    public fun ${primitive.functions[0]?.name || 'example_function'}(
+    public fun ${primitive.functions?.[0]?.name || 'example_function'}(
         // Parameters would be listed here
     ) {
         // Function implementation
@@ -157,7 +157,7 @@ script {
     
     fun main(account: signer) {
         // Initialize or interact with the primitive
-        ${primitive.moduleName || primitive.name.toLowerCase().replace(/\s+/g, '_')}::${primitive.functions[0]?.name || 'example_function'}(...);
+        ${primitive.moduleName || primitive.name.toLowerCase().replace(/\s+/g, '_')}::${primitive.functions?.[0]?.name || 'example_function'}(...);
     }
 }`}
                     </pre>
@@ -178,7 +178,7 @@ module my_defi::leveraged_yield {
     
     public fun setup_yield_strategy() {
         // Use the primitive as part of a larger composition
-        ${primitive.moduleName || primitive.name.toLowerCase().replace(/\s+/g, '_')}::${primitive.functions[0]?.name || 'example_function'}(...);
+        ${primitive.moduleName || primitive.name.toLowerCase().replace(/\s+/g, '_')}::${primitive.functions?.[0]?.name || 'example_function'}(...);
         // Call other primitives...
     }
 }`}

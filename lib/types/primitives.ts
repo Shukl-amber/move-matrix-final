@@ -230,5 +230,71 @@ export const mockPrimitives: IPrimitive[] = [
     createdAt: new Date("2023-02-10"),
     updatedAt: new Date("2023-03-15"),
     deploymentAddress: "0x6"
+  },
+  {
+    id: "liquidity-pool",
+    name: "Liquidity Pool",
+    description: "A primitive that implements an automated market maker liquidity pool for token pairs.",
+    category: "swap",
+    moduleAddress: "0xpool",
+    moduleName: "liquidity_pool",
+    functions: [
+      {
+        name: "add_liquidity",
+        description: "Add liquidity to the pool with both tokens",
+        parameters: ["coin_a_amount", "coin_b_amount", "min_lp_tokens"],
+        returnType: "u64"
+      },
+      {
+        name: "remove_liquidity",
+        description: "Remove liquidity from the pool and get back both tokens",
+        parameters: ["lp_amount", "min_a_out", "min_b_out"],
+        returnType: "u64"
+      },
+      {
+        name: "swap",
+        description: "Swap one token for another through the pool",
+        parameters: ["coin_in_amount", "min_out", "is_a_to_b"],
+        returnType: "u64"
+      }
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: "autocompound-staking",
+    name: "AutoCompound Staking",
+    description: "A primitive that automatically compounds rewards for staked tokens.",
+    category: "staking",
+    moduleAddress: "0xstake",
+    moduleName: "auto_stake",
+    functions: [
+      {
+        name: "stake",
+        description: "Stake tokens in the autocompounding vault",
+        parameters: ["amount", "lock_period"],
+        returnType: "u64"
+      },
+      {
+        name: "unstake",
+        description: "Unstake tokens and claim accumulated rewards",
+        parameters: ["amount"],
+        returnType: "u64"
+      },
+      {
+        name: "compound",
+        description: "Manually trigger compounding of rewards (can be called by anyone)",
+        parameters: [],
+        returnType: "bool"
+      },
+      {
+        name: "get_apr",
+        description: "Get current annual percentage rate",
+        parameters: [],
+        returnType: "u64"
+      }
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date()
   }
 ]; 

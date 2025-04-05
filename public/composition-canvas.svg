@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+  <rect width="1200" height="675" fill="#f8fafc" />
+  
+  <!-- Grid background -->
+  <g fill="none" stroke="#e2e8f0" stroke-width="1">
+    <g id="grid">
+      <path d="M0,0 L1200,0 M0,50 L1200,50 M0,100 L1200,100 M0,150 L1200,150 M0,200 L1200,200 M0,250 L1200,250 M0,300 L1200,300 M0,350 L1200,350 M0,400 L1200,400 M0,450 L1200,450 M0,500 L1200,500 M0,550 L1200,550 M0,600 L1200,600 M0,650 L1200,650" />
+      <path d="M0,0 L0,675 M50,0 L50,675 M100,0 L100,675 M150,0 L150,675 M200,0 L200,675 M250,0 L250,675 M300,0 L300,675 M350,0 L350,675 M400,0 L400,675 M450,0 L450,675 M500,0 L500,675 M550,0 L550,675 M600,0 L600,675 M650,0 L650,675 M700,0 L700,675 M750,0 L750,675 M800,0 L800,675 M850,0 L850,675 M900,0 L900,675 M950,0 L950,675 M1000,0 L1000,675 M1050,0 L1050,675 M1100,0 L1100,675 M1150,0 L1150,675" />
+    </g>
+  </g>
+  
+  <!-- Lending Protocol Node -->
+  <g transform="translate(250, 300)">
+    <rect x="-100" y="-60" width="200" height="120" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" />
+    <text x="0" y="-25" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold" fill="#1e40af">Lending Protocol</text>
+    <line x1="-80" y1="0" x2="80" y2="0" stroke="#64748b" stroke-width="1" stroke-dasharray="4 2" />
+    <text x="0" y="25" font-family="Arial" font-size="14" text-anchor="middle" fill="#1e40af">borrow()</text>
+    <circle cx="100" cy="0" r="8" fill="#3b82f6" />
+  </g>
+  
+  <!-- AMM Swap Node -->
+  <g transform="translate(600, 300)">
+    <rect x="-100" y="-60" width="200" height="120" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="2" />
+    <text x="0" y="-25" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold" fill="#166534">AMM Swap</text>
+    <line x1="-80" y1="0" x2="80" y2="0" stroke="#64748b" stroke-width="1" stroke-dasharray="4 2" />
+    <text x="0" y="25" font-family="Arial" font-size="14" text-anchor="middle" fill="#166534">swapExactTokensForTokens()</text>
+    <circle cx="-100" cy="0" r="8" fill="#22c55e" />
+    <circle cx="100" cy="0" r="8" fill="#22c55e" />
+  </g>
+  
+  <!-- Yield Farm Node -->
+  <g transform="translate(950, 300)">
+    <rect x="-100" y="-60" width="200" height="120" rx="6" fill="#f3e8ff" stroke="#a855f7" stroke-width="2" />
+    <text x="0" y="-25" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold" fill="#7e22ce">Yield Farm</text>
+    <line x1="-80" y1="0" x2="80" y2="0" stroke="#64748b" stroke-width="1" stroke-dasharray="4 2" />
+    <text x="0" y="25" font-family="Arial" font-size="14" text-anchor="middle" fill="#7e22ce">deposit()</text>
+    <circle cx="-100" cy="0" r="8" fill="#a855f7" />
+  </g>
+  
+  <!-- Connection Lines -->
+  <g fill="none" stroke-width="2">
+    <!-- Lending to AMM -->
+    <path d="M350,300 C450,300 400,300 500,300" stroke="#3b82f6" />
+    <polygon points="495,295 505,300 495,305" fill="#3b82f6" stroke="none" />
+    
+    <!-- AMM to Yield -->
+    <path d="M700,300 C800,300 750,300 850,300" stroke="#22c55e" />
+    <polygon points="845,295 855,300 845,305" fill="#22c55e" stroke="none" />
+  </g>
+  
+  <!-- Toolbox -->
+  <g transform="translate(80, 550)">
+    <rect x="-60" y="-40" width="120" height="80" rx="4" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" />
+    <text x="0" y="-15" font-family="Arial" font-size="12" text-anchor="middle" fill="#475569">Primitives</text>
+    <text x="0" y="15" font-family="Arial" font-size="10" text-anchor="middle" fill="#64748b">Drag & Drop</text>
+  </g>
+  
+  <!-- Controls -->
+  <g transform="translate(1120, 60)">
+    <rect x="-60" y="-40" width="120" height="200" rx="4" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" />
+    <g transform="translate(0, -20)">
+      <circle cx="0" cy="0" r="15" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1" />
+      <text x="0" y="4" font-family="Arial" font-size="12" text-anchor="middle" fill="#475569">+</text>
+    </g>
+    <g transform="translate(0, 20)">
+      <circle cx="0" cy="0" r="15" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1" />
+      <text x="0" y="4" font-family="Arial" font-size="12" text-anchor="middle" fill="#475569">-</text>
+    </g>
+    <g transform="translate(0, 60)">
+      <circle cx="0" cy="0" r="15" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1" />
+      <path d="M-5,-5 L5,5 M-5,5 L5,-5" stroke="#475569" stroke-width="1.5" />
+    </g>
+    <g transform="translate(0, 100)">
+      <circle cx="0" cy="0" r="15" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1" />
+      <path d="M-5,0 L5,0 M0,-5 L0,5" stroke="#475569" stroke-width="1.5" />
+    </g>
+  </g>
+  
+  <!-- Watermark -->
+  <text x="600" y="650" font-family="Arial" font-size="14" text-anchor="middle" fill="#94a3b8">MoveMatrix Composition Canvas</text>
+</svg> 

@@ -1,18 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { mockPrimitives } from '@/lib/types/primitives';
 import { ArrowRight, ArrowLeft, Plus, Check, X, Layers, Save } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { IConnection, IParameterMapping, CompositionStatus } from '@/lib/db/models/composition';
 import ConnectionBuilder from '@/components/compositions/ConnectionBuilder';
+import { createNewComposition } from '@/app/actions/compositionActions';
+import { IPrimitive } from '@/lib/db/models/primitive';
 
 export default function NewCompositionPage() {
   const router = useRouter();
@@ -22,6 +23,33 @@ export default function NewCompositionPage() {
   const [selectedPrimitiveIds, setSelectedPrimitiveIds] = useState<string[]>([]);
   const [connections, setConnections] = useState<IConnection[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [primitives, setPrimitives] = useState<IPrimitive[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch primitives on component mount
+  useEffect(() => {
+    async function fetchPrimitives() {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/primitives');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch primitives: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        setPrimitives(data.primitives);
+      } catch (err: any) {
+        console.error('Error fetching primitives:', err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchPrimitives();
+  }, []);
 
   const handlePrimitiveToggle = (primitiveId: string) => {
     if (selectedPrimitiveIds.includes(primitiveId)) {
@@ -45,27 +73,42 @@ export default function NewCompositionPage() {
     setIsSubmitting(true);
     
     try {
-      // In a real application, we would call our server action here
-      // const result = await createNewComposition({
-      //   name,
-      //   description,
-      //   primitiveIds: selectedPrimitiveIds,
-      //   connections,
-      //   status: CompositionStatus.DRAFT
-      // });
+      // Generate a random ID for composition (MongoDB will assign a real _id)
+      const compositionId = `comp-${Date.now()}`;
       
-      // For now, just log and navigate
-      console.log('Saving composition:', {
+      // Create primitives array with positions
+      const primitives = selectedPrimitiveIds.map((primitiveId, index) => ({
+        primitiveId,
+        position: {
+          x: 100 + (index * 200), // Simple layout algorithm
+          y: 150
+        }
+      }));
+      
+      // Call the server action to create the composition
+      const result = await createNewComposition({
+        id: compositionId,
         name,
         description,
+        ownerId: "user-1", // This will be mapped to creatorAddress in the backend
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        status: CompositionStatus.DRAFT, // This will be mapped to deploymentStatus
         primitiveIds: selectedPrimitiveIds,
-        connections
+        primitives: primitives,
+        connections,
       });
       
-      // Navigate to the compositions list page
-      router.push('/compositions');
-    } catch (error) {
+      if (result.success) {
+        console.log('Composition created successfully:', result.data);
+        router.push('/compositions');
+      } else {
+        console.error('Failed to create composition:', result.error);
+        alert(`Failed to create composition: ${result.error}`);
+      }
+    } catch (error: any) {
       console.error('Error saving composition:', error);
+      alert(`Error: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -75,6 +118,35 @@ export default function NewCompositionPage() {
   const canProceedToStep2 = name.trim() !== '' && description.trim() !== '';
   const canProceedToStep3 = selectedPrimitiveIds.length >= 2;
   const canSave = connections.length >= 1;
+
+  // Show loading state
+  if (isLoading && step === 2) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col gap-8">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-semibold mb-4">Loading primitives...</h2>
+            <div className="animate-pulse h-4 bg-muted rounded w-48 mx-auto"></div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Show error state
+  if (error && step === 2) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col gap-8">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-semibold mb-4 text-destructive">Error Loading Primitives</h2>
+            <p className="text-muted-foreground mb-6">{error}</p>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -144,7 +216,7 @@ export default function NewCompositionPage() {
             </>
           )}
 
-          {step === 2 && (
+          {step === 2 && primitives.length > 0 && (
             <>
               <CardHeader>
                 <CardTitle>Select Primitives</CardTitle>
@@ -154,7 +226,7 @@ export default function NewCompositionPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {mockPrimitives.map((primitive) => (
+                  {primitives.map((primitive) => (
                     <Card 
                       key={primitive.id}
                       className={`cursor-pointer transition-all ${selectedPrimitiveIds.includes(primitive.id) ? 'border-primary' : 'hover:border-primary/50'}`}
@@ -179,10 +251,10 @@ export default function NewCompositionPage() {
                         <div className="mt-3 text-xs text-muted-foreground">
                           <p className="font-medium">Functions:</p>
                           <ul className="list-disc list-inside">
-                            {primitive.functions.slice(0, 3).map((func, index) => (
+                            {primitive.functions?.slice(0, 3).map((func, index) => (
                               <li key={index} className="font-mono">{func.name}</li>
                             ))}
-                            {primitive.functions.length > 3 && (
+                            {primitive.functions && primitive.functions.length > 3 && (
                               <li className="text-muted-foreground">+ {primitive.functions.length - 3} more</li>
                             )}
                           </ul>
@@ -205,7 +277,7 @@ export default function NewCompositionPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <ConnectionBuilder 
-                  primitives={mockPrimitives}
+                  primitives={primitives}
                   selectedPrimitiveIds={selectedPrimitiveIds}
                   connections={connections}
                   onConnectionsChange={setConnections}

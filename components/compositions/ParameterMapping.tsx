@@ -31,6 +31,34 @@ interface ParameterMappingProps {
   onParameterMappingsChange: (mappings: IParameterMapping[]) => void;
 }
 
+// Add this helper function to safely get parameter names
+const getParameterNames = (funcObj: IFunction | undefined): string[] => {
+  if (!funcObj || !funcObj.parameters) {
+    return [];
+  }
+  
+  if (!Array.isArray(funcObj.parameters)) {
+    return [];
+  }
+  
+  return funcObj.parameters.map(param => {
+    if (typeof param === 'string') {
+      return param;
+    }
+    // Handle MongoDB object with _id
+    if (typeof param === 'object' && param !== null) {
+      // Use type assertion to handle MongoDB object
+      const objParam = param as Record<string, any>;
+      if (objParam.name && typeof objParam.name === 'string') {
+        return objParam.name;
+      }
+      // Try to convert to string representation
+      return JSON.stringify(param).replace(/[{}"]/g, '').replace(/_id:[^,]+,?/, '');
+    }
+    return String(param);
+  });
+};
+
 export default function ParameterMapping({
   sourcePrimitive,
   sourceFunction,
@@ -40,10 +68,10 @@ export default function ParameterMapping({
   onParameterMappingsChange
 }: ParameterMappingProps) {
   // Find selected functions
-  const sourceFuncObj = sourcePrimitive.functions.find(f => f.name === sourceFunction);
-  const targetFuncObj = targetPrimitive.functions.find(f => f.name === targetFunction);
+  const sourceFuncObj = sourcePrimitive.functions?.find(f => f.name === sourceFunction);
+  const targetFuncObj = targetPrimitive.functions?.find(f => f.name === targetFunction);
   
-  if (!sourceFuncObj || !targetFuncObj) {
+  if (!sourcePrimitive.functions || !targetPrimitive.functions || !sourceFuncObj || !targetFuncObj) {
     return (
       <div className="p-4 text-center text-muted-foreground">
         Please select valid functions from both primitives
@@ -51,13 +79,17 @@ export default function ParameterMapping({
     );
   }
 
+  // Get parameter names
+  const sourceParams = getParameterNames(sourceFuncObj);
+  const targetParams = getParameterNames(targetFuncObj);
+
   // Add a new parameter mapping
   const addParameterMapping = () => {
-    if (!targetFuncObj.parameters.length) return;
+    if (!targetParams.length) return;
     
     const newMapping: IParameterMapping = {
       sourceParam: null, // Initially set to constant value
-      targetParam: targetFuncObj.parameters[0],
+      targetParam: targetParams[0],
       constantValue: ''
     };
     
@@ -129,7 +161,7 @@ export default function ParameterMapping({
                           <SelectValue placeholder="Select parameter" />
                         </SelectTrigger>
                         <SelectContent>
-                          {targetFuncObj.parameters.map((param) => (
+                          {targetParams.map((param) => (
                             <SelectItem key={param} value={param}>
                               {param}
                             </SelectItem>
@@ -148,7 +180,7 @@ export default function ParameterMapping({
                             updateParameterMapping(
                               index, 
                               'sourceParam', 
-                              sourceFuncObj.parameters.length > 0 ? sourceFuncObj.parameters[0] : null
+                              sourceParams.length > 0 ? sourceParams[0] : null
                             );
                           } else {
                             updateParameterMapping(index, 'sourceParam', null);
@@ -177,7 +209,7 @@ export default function ParameterMapping({
                             <SelectValue placeholder="Select parameter" />
                           </SelectTrigger>
                           <SelectContent>
-                            {sourceFuncObj.parameters.map((param) => (
+                            {sourceParams.map((param) => (
                               <SelectItem key={param} value={param}>
                                 {param}
                               </SelectItem>
@@ -206,7 +238,7 @@ export default function ParameterMapping({
             size="sm"
             className="mt-4 w-full"
             onClick={addParameterMapping}
-            disabled={!targetFuncObj.parameters.length}
+            disabled={!targetParams.length}
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Parameter Mapping

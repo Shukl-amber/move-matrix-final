@@ -5,14 +5,17 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { mockPrimitives } from '@/lib/types/primitives';
+import { getAllPrimitives } from '@/lib/db/services/primitiveService';
 
 export const metadata: Metadata = {
   title: 'Primitives - MoveMatrix',
   description: 'Manage and configure DeFi primitives in MoveMatrix',
 };
 
-export default function PrimitivesPage() {
+export default async function PrimitivesPage() {
+  // Fetch primitives from the database
+  const primitives = await getAllPrimitives();
+  
   return (
     <MainLayout>
       <div className="flex flex-col gap-8">
@@ -32,7 +35,7 @@ export default function PrimitivesPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {mockPrimitives.map((primitive) => (
+          {primitives.map((primitive) => (
             <Card key={primitive.id}>
               <CardHeader>
                 <div className="flex justify-between items-center">
@@ -47,12 +50,12 @@ export default function PrimitivesPage() {
                 <div className="mb-4">
                   <div className="text-sm font-medium mb-1">Functions</div>
                   <div className="space-y-1">
-                    {primitive.functions.slice(0, 3).map((func) => (
+                    {primitive.functions?.slice(0, 3).map((func) => (
                       <div key={func.name} className="text-xs text-muted-foreground">
                         {func.name}({func.parameters.join(', ')})
                       </div>
                     ))}
-                    {primitive.functions.length > 3 && (
+                    {primitive.functions && primitive.functions.length > 3 && (
                       <div className="text-xs text-muted-foreground">
                         +{primitive.functions.length - 3} more...
                       </div>

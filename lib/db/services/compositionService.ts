@@ -1,9 +1,13 @@
 import connectToDB from '../mongoose';
-import { Composition, IComposition } from '../models/composition';
+import { Composition, IComposition, CompositionStatus } from '../models/composition';
 
 // Get all compositions
 export async function getAllCompositions(): Promise<IComposition[]> {
   await connectToDB();
+  
+  if (!Composition) {
+    throw new Error('Composition model not initialized');
+  }
   
   const compositions = await Composition.find({})
     .sort({ createdAt: -1 });
@@ -15,6 +19,10 @@ export async function getAllCompositions(): Promise<IComposition[]> {
 export async function getCompositionsByCreator(creatorAddress: string): Promise<IComposition[]> {
   await connectToDB();
   
+  if (!Composition) {
+    throw new Error('Composition model not initialized');
+  }
+  
   const compositions = await Composition.find({ creatorAddress })
     .sort({ createdAt: -1 });
   
@@ -22,21 +30,47 @@ export async function getCompositionsByCreator(creatorAddress: string): Promise<
 }
 
 // Get composition by ID
-export async function getCompositionById(id: string): Promise<IComposition | null> {
+export async function getCompositionById(id: string | undefined): Promise<IComposition | null> {
   await connectToDB();
   
-  const composition = await Composition.findById(id);
+  if (!Composition) {
+    throw new Error('Composition model not initialized');
+  }
   
-  if (!composition) return null;
+  // Return null if id is undefined or not a valid ObjectId
+  if (!id || id === 'undefined') {
+    console.log('Invalid composition ID:', id);
+    return null;
+  }
   
-  return JSON.parse(JSON.stringify(composition));
+  try {
+    const composition = await Composition.findById(id);
+    
+    if (!composition) return null;
+    
+    return JSON.parse(JSON.stringify(composition));
+  } catch (error) {
+    console.error('Error fetching composition:', error);
+    return null;
+  }
 }
 
 // Create a new composition
 export async function createComposition(compositionData: IComposition): Promise<IComposition> {
   await connectToDB();
   
-  const newComposition = new Composition(compositionData);
+  if (!Composition) {
+    throw new Error('Composition model not initialized');
+  }
+  
+  // Map ownerId to creatorAddress as expected by the schema
+  const compositionToSave = {
+    ...compositionData,
+    creatorAddress: compositionData.ownerId, // Map ownerId to creatorAddress
+    deploymentStatus: compositionData.status // Map status to deploymentStatus
+  };
+  
+  const newComposition = new Composition(compositionToSave);
   await newComposition.save();
   
   return JSON.parse(JSON.stringify(newComposition));
@@ -45,6 +79,10 @@ export async function createComposition(compositionData: IComposition): Promise<
 // Update an existing composition
 export async function updateComposition(id: string, compositionData: Partial<IComposition>): Promise<IComposition | null> {
   await connectToDB();
+  
+  if (!Composition) {
+    throw new Error('Composition model not initialized');
+  }
   
   const updatedComposition = await Composition.findByIdAndUpdate(
     id,
@@ -65,6 +103,10 @@ export async function updateCompositionDeploymentStatus(
   generatedCode?: string
 ): Promise<IComposition | null> {
   await connectToDB();
+  
+  if (!Composition) {
+    throw new Error('Composition model not initialized');
+  }
   
   const updateData: any = { 
     deploymentStatus: status,
@@ -88,6 +130,10 @@ export async function updateCompositionDeploymentStatus(
 // Delete a composition
 export async function deleteComposition(id: string): Promise<boolean> {
   await connectToDB();
+  
+  if (!Composition) {
+    throw new Error('Composition model not initialized');
+  }
   
   const result = await Composition.findByIdAndDelete(id);
   
