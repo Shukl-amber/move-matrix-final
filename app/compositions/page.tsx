@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default async function CompositionsPage() {
   // Fetch compositions from the database
   const compositions = await getAllCompositions();
-  console.log(compositions);
+  // console.log(compositions);
   
   // Create a map of primitive IDs to names for display
   const primitiveNames = new Map<string, string>();
@@ -66,7 +66,6 @@ export default async function CompositionsPage() {
         {compositions.length > 0 ? (
           <div className="space-y-8">
             {compositions.map((composition) => {
-              // Ensure we have a valid ID before rendering
               const compositionId = composition.id || composition._id;
               if (!compositionId) {
                 console.error('Invalid composition ID:', composition);
