@@ -37,10 +37,10 @@ export interface IDeploymentResult {
 }
 
 // Generate Move code from a composition
-export function generateMoveCode(
+export async function generateMoveCode(
   composition: IComposition,
   primitives: Record<string, IPrimitive>
-): IGeneratedCode {
+): Promise<IGeneratedCode> {
   try {
     // Create a sanitized module name
     const moduleName = composition.name
@@ -117,11 +117,33 @@ export function generateMoveCode(
 ${mainFunctionBody}    }
 `;
     
-    const fullSourceCode = `module ${moduleName} {
+    let fullSourceCode = `module ${moduleName} {
     ${imports.join('\n    ')}
     
 ${mainFunction}
 }`;
+
+    // Try to refine the code using Gemini if available
+    try {
+      const { refineGeneratedCode } = await import('./geminiCodeRefiner');
+      
+      // Adapt the composition to match the database model interface
+      const adaptedComposition = {
+        ...composition,
+        primitiveIds: Array.isArray(composition.primitives) 
+          ? composition.primitives
+          : Object.keys(primitives),
+        // Add any other required properties
+        _id: composition.id || 'temp_id',
+        status: composition.status || 'draft',
+        connections: composition.connections || []
+      };
+      
+      fullSourceCode = await refineGeneratedCode(adaptedComposition, primitives, fullSourceCode);
+    } catch (refinementError) {
+      console.warn('Code refinement with Gemini failed, using standard generation:', refinementError);
+      // Continue with the standard generated code
+    }
     
     return {
       moduleName,

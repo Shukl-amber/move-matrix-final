@@ -654,7 +654,24 @@ export default function CompositionDetail({ composition, primitives }: Compositi
           </div>
           
           {generatedCode ? (
-            <CodeViewer generatedCode={generatedCode} onDownload={() => console.log('Code downloaded')} />
+            <>
+              {generatedCode.fullSourceCode.includes('refined using AI') && (
+                <div className="bg-green-50 border border-green-100 rounded-md p-3 mb-4 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                    <path d="M12 2a7 7 0 0 1 7 7c0 2.1-.9 3.9-2.3 5.2l-1.2 1.2a7 7 0 1 1-3.5-13.4" />
+                    <path d="M12 2c-1.3 0-2.5.3-3.6.8" />
+                    <path d="m21 8-5 5" />
+                    <path d="m10 19-5 5" />
+                    <path d="M15 5a7 7 0 1 1-1.1 13.8" />
+                  </svg>
+                  <div>
+                    <p className="text-green-800 font-medium text-sm">AI-Enhanced Code</p>
+                    <p className="text-green-700 text-xs">This code has been refined by AI for better quality, security, and efficiency</p>
+                  </div>
+                </div>
+              )}
+              <CodeViewer generatedCode={generatedCode} onDownload={() => console.log('Code downloaded')} />
+            </>
           ) : (
             <div className="bg-muted p-4 rounded-md overflow-x-auto">
               <div className="text-center py-8">

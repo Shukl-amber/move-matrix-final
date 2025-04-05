@@ -11,6 +11,7 @@
     "seed": "node scripts/seed-with-env.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.0",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.0.1",
