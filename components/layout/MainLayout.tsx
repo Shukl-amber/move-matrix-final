@@ -29,10 +29,10 @@ const NavItem = ({ href, icon, label, isActive }: NavItemProps) => (
   <Link href={href} passHref>
     <div
       className={cn(
-        "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:text-primary",
+        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all",
         isActive 
-          ? "bg-primary/10 text-primary" 
-          : "text-muted-foreground hover:bg-primary/5"
+          ? "bg-purple text-white font-medium" 
+          : "text-white/70 hover:bg-purple/10 hover:text-white"
       )}
     >
       {icon}
@@ -81,21 +81,21 @@ export function MainLayout({ children }: MainLayoutProps) {
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-black">
       {/* Mobile Header */}
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-6 md:hidden">
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/10 bg-black/50 backdrop-blur-sm px-6 md:hidden">
         <Button
           variant="outline"
           size="icon"
-          className="shrink-0 md:hidden"
+          className="shrink-0 md:hidden border-white/10 hover:bg-purple/10 hover:text-white"
           onClick={toggleMenu}
         >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle menu</span>
         </Button>
         <div className="flex items-center gap-2">
-          <CircleDollarSign className="h-6 w-6" />
-          <span className="text-lg font-semibold">MoveMatrix</span>
+          <CircleDollarSign className="h-6 w-6 text-purple" />
+          <span className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">MoveMatrix</span>
         </div>
         <div className="ml-auto">
           <WalletConnect />
@@ -106,18 +106,18 @@ export function MainLayout({ children }: MainLayoutProps) {
         {/* Sidebar */}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-background transition-transform md:static md:translate-x-0",
+            "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-white/10 bg-black/50 backdrop-blur-sm transition-transform md:static md:translate-x-0",
             menuOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          <div className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background p-6">
-            <CircleDollarSign className="h-6 w-6" />
-            <span className="text-lg font-semibold">MoveMatrix</span>
+          <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/10 bg-black/50 backdrop-blur-sm p-6">
+            <CircleDollarSign className="h-6 w-6 text-purple" />
+            <span className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">MoveMatrix</span>
             {menuOpen && (
               <Button
                 variant="outline"
                 size="icon"
-                className="absolute right-4 top-4 shrink-0 md:hidden"
+                className="absolute right-4 top-4 shrink-0 md:hidden border-white/10 hover:bg-purple/10 hover:text-white"
                 onClick={toggleMenu}
               >
                 <X className="h-5 w-5" />
@@ -125,7 +125,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               </Button>
             )}
           </div>
-          <nav className="flex-1 overflow-auto p-4">
+          <nav className="flex-1 space-y-1 overflow-auto p-4">
             <div className="space-y-1">
               {navigationItems.map((item) => (
                 <NavItem
@@ -138,13 +138,13 @@ export function MainLayout({ children }: MainLayoutProps) {
               ))}
             </div>
           </nav>
-          <div className="sticky bottom-0 border-t bg-background p-4">
+          <div className="sticky bottom-0 border-t border-white/10 bg-black/50 backdrop-blur-sm p-4">
             <WalletConnect />
           </div>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-x-hidden">
+        <main className="flex-1 overflow-x-hidden bg-gradient-to-b from-black to-black/50">
           <div className="container max-w-7xl py-6 md:py-10">{children}</div>
         </main>
       </div>

@@ -1,16 +1,18 @@
-import React from 'react';
+"use client";
+
+import React from "react";
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { MainLayout } from "@/components/layout/MainLayout";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowUpRight } from "lucide-react";
 import { getAllPrimitives } from '@/lib/db/services/primitiveService';
 
-export const metadata: Metadata = {
-  title: 'Primitives - MoveMatrix',
-  description: 'Manage and configure DeFi primitives in MoveMatrix',
-};
+// export const metadata: Metadata = {
+//   title: 'Primitives - MoveMatrix',
+//   description: 'Manage and configure DeFi primitives in MoveMatrix',
+// };
 
 export default async function PrimitivesPage() {
   // Fetch primitives from the database
@@ -19,55 +21,48 @@ export default async function PrimitivesPage() {
   return (
     <MainLayout>
       <div className="flex flex-col gap-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Primitives</h1>
-            <p className="text-muted-foreground">
-              DeFi building blocks that can be composed into complex financial products.
-            </p>
-          </div>
-          <Link href="/primitives/new" passHref>
-            <Button className="w-full md:w-auto gap-2">
-              <Plus className="h-4 w-4" />
-              New Primitive
-            </Button>
-          </Link>
+        {/* Header */}
+        <div>
+          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">
+            DeFi <span className="text-purple">Primitives</span>
+          </h1>
+          <p className="text-white/70 mt-2">
+            Explore and use our pre-built, secure DeFi building blocks
+          </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Primitives Grid */}
+        <div className="grid md:grid-cols-2 gap-6">
           {primitives.map((primitive) => (
-            <Card key={primitive.id}>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle>{primitive.name}</CardTitle>
-                  <div className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium capitalize">
+            <Card
+              key={primitive.id}
+              className="border border-white/10 backdrop-blur-sm bg-black-200/50 p-6 rounded-xl group hover:border-purple/50 transition-all"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xl font-semibold">{primitive.name}</h3>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple/20 text-purple mt-2">
                     {primitive.category}
-                  </div>
+                  </span>
+                  {primitive.status === "Beta" && (
+                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-500">
+                      Beta
+                    </span>
+                  )}
                 </div>
-                <CardDescription>{primitive.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4">
-                  <div className="text-sm font-medium mb-1">Functions</div>
-                  <div className="space-y-1">
-                    {primitive.functions?.slice(0, 3).map((func) => (
-                      <div key={func.name} className="text-xs text-muted-foreground">
-                        {func.name}({func.parameters.join(', ')})
-                      </div>
-                    ))}
-                    {primitive.functions && primitive.functions.length > 3 && (
-                      <div className="text-xs text-muted-foreground">
-                        +{primitive.functions.length - 3} more...
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <Link href={`/primitives/${primitive.id}`} passHref>
-                  <Button variant="outline" className="w-full justify-between">
-                    View Details <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </CardContent>
+                <ArrowUpRight className="h-5 w-5 text-white/30 group-hover:text-purple transition-colors" />
+              </div>
+              <p className="text-white/70 text-sm mb-4">
+                {primitive.description}
+              </p>
+              <div className="flex gap-2">
+                <Button 
+                  className="bg-purple hover:bg-purple/80 text-white rounded-xl flex-1"
+                  onClick={() => window.location.href = `/primitives/${primitive.id}`}
+                >
+                  View Details
+                </Button>
+              </div>
             </Card>
           ))}
         </div>
