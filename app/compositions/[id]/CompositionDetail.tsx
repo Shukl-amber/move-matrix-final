@@ -134,9 +134,31 @@ export default function CompositionDetail({ composition, primitives }: Compositi
   };
   
   // Handle delete
-  const handleDelete = () => {
-    console.log('Deleting composition:', composition.id);
-    router.push('/compositions');
+  const handleDelete = async () => {
+    try {
+      const compositionId = composition.id || composition._id;
+      if (!compositionId) {
+        console.error('Invalid composition ID:', composition);
+        return;
+      }
+
+      // Import the delete action
+      const { deleteExistingComposition } = await import('@/app/actions/compositionActions');
+      
+      // Delete the composition
+      const result = await deleteExistingComposition(compositionId);
+      
+      if (result.success) {
+        // Redirect to compositions page after successful deletion
+        router.push('/compositions');
+      } else {
+        console.error('Failed to delete composition:', result.error);
+        alert('Failed to delete composition: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error deleting composition:', error);
+      alert('An error occurred while deleting the composition');
+    }
   };
   
   // Function to handle deployment with our utility functions
