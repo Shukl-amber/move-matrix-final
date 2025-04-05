@@ -1,6 +1,6 @@
 "use client";
 
-import { navItems } from "@/data";
+import { navItems } from "@/lib/data";
 import Hero from "@/components/Hero";
 import Footer from "@/components/Footer";
 import Clients from "@/components/Clients";
