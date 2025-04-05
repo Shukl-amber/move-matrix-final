@@ -106,6 +106,7 @@ export default function DashboardPage() {
           </Link>
         </div>
 
+<<<<<<< HEAD
         {/* Stats Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, index) => (
@@ -129,6 +130,8 @@ export default function DashboardPage() {
             </Card>
           ))}
         </div>
+=======
+>>>>>>> 3ebe0b775c8040c2f06b4cb0b2a946e8461ac9cb
 
         {/* Quick Actions */}
         <div>

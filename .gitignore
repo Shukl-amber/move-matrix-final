@@ -40,4 +40,3 @@ next-env.d.ts
 .aptos/
 .aptos
 tmp/aptos-core
-data/

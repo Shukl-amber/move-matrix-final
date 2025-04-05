@@ -9,9 +9,30 @@ Move Matrix is a powerful tool that enables developers to compose and deploy DeF
 - **Visual Composition:** Drag-and-drop interface for connecting DeFi primitives
 - **Primitive Library:** Pre-built lending, swap, staking, and yield farming primitives
 - **Connection Validation:** Real-time validation of primitive connections ensuring protocol safety
-- **Code Generation:** Automated Move code generation based on visual compositions
+- **AI-Enhanced Code Generation:** Automated Move code generation with Gemini AI refinement
 - **One-click Deployment:** Deploy to Aptos testnet directly from the UI
 - **Wallet Integration:** Connect with Petra wallet for seamless interaction
+
+## AI Code Enhancement
+
+Move Matrix uses Google's Gemini API to refine and enhance the generated Move code:
+
+- **Improved Security:** AI analyzes the code for potential security vulnerabilities
+- **Gas Optimization:** Suggests optimizations to reduce gas costs
+- **Best Practices:** Applies Move language best practices automatically
+- **Error Handling:** Adds comprehensive error codes and validation
+- **Documentation:** Generates clear inline documentation
+- **JSON Output:** Returns code in a structured JSON format for reliable parsing
+
+To enable this feature, you need to:
+1. Obtain a Gemini API key from [Google AI Studio](https://ai.google.dev/)
+2. Add the key to your `.env.local` file as `GEMINI_API_KEY=your-key`
+3. Restart the application
+
+You can test the Gemini integration by running the example script:
+```bash
+node scripts/gemini-example.js
+```
 
 ## Architecture Overview
 
@@ -19,8 +40,9 @@ Move Matrix consists of:
 
 1. **Frontend:** Next.js-based UI for visual composition building
 2. **Backend:** Server-side APIs for primitive management, composition handling, and code generation
-3. **Move Compiler:** Integration with Aptos CLI for code compilation and deployment
-4. **MongoDB:** Database for storing primitives, compositions, and user data
+3. **AI Code Refinement:** Google Gemini API integration for optimizing generated code
+4. **Move Compiler:** Integration with Aptos CLI for code compilation and deployment
+5. **MongoDB:** Database for storing primitives, compositions, and user data
 
 ## Prerequisites
 
@@ -52,6 +74,7 @@ Before you begin, ensure you have the following installed:
    ```
    MONGODB_URI=mongodb+srv://your-mongodb-uri
    NEXT_PUBLIC_API_URL=http://localhost:3000
+   GEMINI_API_KEY=your-google-gemini-api-key  # Optional, for AI code enhancement
    ```
 
 4. **Set up Aptos configuration:**

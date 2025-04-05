@@ -21,6 +21,7 @@ import { ArrowUpRight } from "lucide-react";
 export default async function CompositionsPage() {
   // Fetch compositions from the database
   const compositions = await getAllCompositions();
+  // console.log(compositions);
   
   // Create a map of primitive IDs to names for display
   const primitiveNames = new Map<string, string>();
@@ -77,6 +78,7 @@ export default async function CompositionsPage() {
         </div>
 
         {compositions.length > 0 ? (
+<<<<<<< HEAD
           <div className="grid md:grid-cols-2 gap-6">
             {compositions.map((composition) => (
               <Card
@@ -105,9 +107,51 @@ export default async function CompositionsPage() {
                         In Development
                       </span>
                     )}
+=======
+          <div className="space-y-8">
+            {compositions.map((composition) => {
+              const compositionId = composition.id || composition._id;
+              if (!compositionId) {
+                console.error('Invalid composition ID:', composition);
+                return null;
+              }
+              
+              return (
+                <div key={compositionId} className="bg-background border rounded-lg overflow-hidden">
+                  <div className="grid md:grid-cols-3 gap-6 p-6">
+                    <div className="col-span-2">
+                      <div className="mb-2 flex items-center gap-2">
+                        <h2 className="text-2xl font-bold">{composition.name}</h2>
+                        {getStatusBadge(composition.status || 'draft')}
+                      </div>
+                      <p className="text-muted-foreground mb-4">{composition.description}</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {(composition.primitiveIds || []).map((primitiveId) => (
+                          <div key={primitiveId} className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium">
+                            {getPrimitiveName(primitiveId)}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-col md:items-end justify-center gap-2">
+                      <Button asChild variant="outline">
+                        <Link href={`/compositions/${compositionId}`}>
+                          View Details <ArrowRight className="h-4 w-4 ml-2" />
+                        </Link>
+                      </Button>
+                      {composition.status === CompositionStatus.DEPLOYED ? (
+                        <Button>
+                          <Link href={`/compositions/${compositionId}`}>
+                            Deploy Composition
+                          </Link>
+                        </Button>
+                      ) : null}
+                    </div>
+>>>>>>> 3ebe0b775c8040c2f06b4cb0b2a946e8461ac9cb
                   </div>
                   <ArrowUpRight className="h-5 w-5 text-white/30 group-hover:text-purple transition-colors" />
                 </div>
+<<<<<<< HEAD
                 <p className="text-white/70 text-sm mb-4">
                   {composition.description}
                 </p>
@@ -121,6 +165,10 @@ export default async function CompositionsPage() {
                 </div>
               </Card>
             ))}
+=======
+              );
+            })}
+>>>>>>> 3ebe0b775c8040c2f06b4cb0b2a946e8461ac9cb
           </div>
         ) : (
           <div className="text-center py-12 border rounded-lg">
