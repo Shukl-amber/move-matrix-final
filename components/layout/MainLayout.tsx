@@ -67,8 +67,8 @@ export function MainLayout({ children }: MainLayoutProps) {
       icon: <Layers className="h-4 w-4" />,
     },
     {
-      href: '/examples',
-      label: 'Examples',
+      href: '/documentation',
+      label: 'Documentation',
       icon: <Book className="h-4 w-4" />,
     },
     {
